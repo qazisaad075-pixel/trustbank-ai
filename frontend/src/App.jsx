@@ -1,0 +1,1615 @@
+import React, { useEffect, useState } from 'react';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  Send,
+  Landmark,
+  Lock,
+  Unlock,
+  Cpu,
+  Database,
+  RefreshCw,
+  FileCheck2,
+  Clock,
+  MapPin,
+  LogOut,
+  UserPlus,
+  LogIn,
+  CreditCard,
+  Eye,
+  EyeOff,
+  FileSpreadsheet,
+  Download,
+  LayoutDashboard,
+  Bell,
+  Copy,
+  Check,
+  Search,
+  ArrowUpRight,
+  ArrowDownLeft,
+  PlusCircle,
+  BadgeCheck,
+  Building2,
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+
+const PAKISTANI_CITIES = [
+  'Lahore',
+  'Karachi',
+  'Islamabad',
+  'Rawalpindi',
+  'Faisalabad',
+  'Multan',
+  'Peshawar',
+  'Quetta',
+  'Dubai (Intl)',
+  'London (Intl)',
+];
+
+const SUPPORTED_BANKS = [
+  'TrustBank AI',
+  'Meezan Bank Limited',
+  'Habib Bank Limited (HBL)',
+  'Bank Alfalah',
+  'United Bank Limited (UBL)',
+  'MCB Bank',
+  'Allied Bank (ABL)',
+  'SadaPay',
+  'NayaPay',
+  'JazzCash',
+  'EasyPaisa',
+];
+
+export default function App() {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('trustbank_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [authMode, setAuthMode] = useState('login');
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const [regForm, setRegForm] = useState({
+    full_name: '',
+    cnic: '',
+    email: '',
+    password: '',
+    city: 'Lahore',
+    monthly_income: '120000',
+    employment_status: 'Salaried',
+    account_type: 'Current',
+    initial_deposit: '50000',
+  });
+
+  const [activeSection, setActiveSection] = useState('overview');
+  const [dashboard, setDashboard] = useState(null);
+  const [metrics, setMetrics] = useState(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [copiedIban, setCopiedIban] = useState(false);
+
+  // Real IBFT Transfer Form State
+  const [beneficiaryBank, setBeneficiaryBank] = useState('TrustBank AI');
+  const [beneficiaryAccNum, setBeneficiaryAccNum] = useState('');
+  const [beneficiaryTitle, setBeneficiaryTitle] = useState('');
+  const [verifiedHolder, setVerifiedHolder] = useState(null);
+  const [lookupError, setLookupError] = useState('');
+  const [lookingUp, setLookingUp] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [txnCity, setTxnCity] = useState('Lahore');
+  const [txnHour, setTxnHour] = useState(14);
+  const [transferFeedback, setTransferFeedback] = useState(null);
+  const [submittingTransfer, setSubmittingTransfer] = useState(false);
+
+  // Cash Deposit State
+  const [depositAmount, setDepositAmount] = useState('25000');
+  const [depositSource, setDepositSource] = useState('Branch Cash Counter / CDM');
+  const [depositFeedback, setDepositFeedback] = useState(null);
+  const [submittingDeposit, setSubmittingDeposit] = useState(false);
+
+  // Statement Filter State
+  const [txnFilter, setTxnFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Loan Application State
+  const [loanAmount, setLoanAmount] = useState('450000');
+  const [tenureMonths, setTenureMonths] = useState(24);
+  const [existingDebt, setExistingDebt] = useState('0');
+  const [loanPurpose, setLoanPurpose] = useState('Home Solar & Energy Upgrade');
+  const [loanFeedback, setLoanFeedback] = useState(null);
+  const [submittingLoan, setSubmittingLoan] = useState(false);
+
+  const fetchAllData = async () => {
+    setLoadingData(true);
+    try {
+      const [dashRes, metRes] = await Promise.all([
+        fetch(`${API_BASE}/dashboard`),
+        fetch(`${API_BASE}/metrics`),
+      ]);
+      const dashData = await dashRes.json();
+      const metData = await metRes.json();
+      setDashboard(dashData);
+      setMetrics(metData);
+
+      if (currentUser) {
+        const refreshedUser = dashData.accounts.find(
+          (a) => a.account_id === currentUser.account_id
+        );
+        if (refreshedUser) {
+          const merged = { ...currentUser, ...refreshedUser };
+          setCurrentUser(merged);
+          localStorage.setItem('trustbank_user', JSON.stringify(merged));
+        }
+      }
+    } catch (err) {
+      console.error('API Error:', err);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      setTxnCity(currentUser.city || 'Lahore');
+      setActiveSection(currentUser.role === 'ADMIN' ? 'compliance' : 'overview');
+      fetchAllData();
+    }
+  }, [currentUser?.account_id]);
+
+  // Verify Account Title from Database when Bank is TrustBank AI
+  const handleVerifyTitle = async () => {
+    if (!beneficiaryAccNum.trim()) return;
+    setLookingUp(true);
+    setLookupError('');
+    setVerifiedHolder(null);
+    try {
+      const res = await fetch(
+        `${API_BASE}/accounts/lookup/${encodeURIComponent(beneficiaryAccNum.trim())}`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setLookupError(data.detail || 'Account not found');
+      } else {
+        setVerifiedHolder(data);
+        setBeneficiaryTitle(data.full_name);
+      }
+    } catch {
+      setLookupError('Unable to verify account title right now.');
+    } finally {
+      setLookingUp(false);
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAuthError(data.detail || 'Invalid credentials');
+      } else {
+        setCurrentUser(data.user);
+        localStorage.setItem('trustbank_user', JSON.stringify(data.user));
+      }
+    } catch {
+      setAuthError('Cannot connect to TrustBank Server on port 8000.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...regForm,
+          monthly_income: parseFloat(regForm.monthly_income),
+          initial_deposit: parseFloat(regForm.initial_deposit),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAuthError(data.detail || 'Account registration failed');
+      } else {
+        setCurrentUser(data.user);
+        localStorage.setItem('trustbank_user', JSON.stringify(data.user));
+      }
+    } catch {
+      setAuthError('Cannot connect to TrustBank Server on port 8000.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('trustbank_user');
+    setCurrentUser(null);
+    setDashboard(null);
+    setTransferFeedback(null);
+    setLoanFeedback(null);
+    setBeneficiaryAccNum('');
+    setBeneficiaryTitle('');
+    setVerifiedHolder(null);
+  };
+
+  // =========================================================
+  // CLEAN LOGIN & ACCOUNT OPENING SCREEN (NO DUMMY USERS)
+  // =========================================================
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row">
+        <div className="lg:w-5/12 bg-gradient-to-br from-emerald-950 via-slate-900 to-slate-950 border-b lg:border-b-0 lg:border-r border-slate-800 p-8 lg:p-12 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <Landmark className="w-6 h-6 text-slate-950 stroke-[2.5]" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-white">
+                  TrustBank <span className="text-emerald-400">AI</span>
+                </h1>
+                <p className="text-xs text-emerald-300/80 font-medium">
+                  Digital Core Banking & Dual-ML Security
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-12 space-y-5">
+              <h2 className="text-3xl font-bold text-white leading-tight">
+                Modern Digital Banking Protected by Real-Time Artificial Intelligence.
+              </h2>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Open your digital bank account in seconds with instant IBAN generation, virtual Platinum debit card, inter-bank IBFT transfers, and automated credit underwriting.
+              </p>
+            </div>
+
+            <div className="mt-8 space-y-3">
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="text-xs">
+                  <div className="font-semibold text-white">RandomForest Fraud Shield</div>
+                  <div className="text-slate-400">Real-time anomaly detection with automated account freeze triggers.</div>
+                </div>
+              </div>
+              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+                <Cpu className="w-5 h-5 text-sky-400 shrink-0" />
+                <div className="text-xs">
+                  <div className="font-semibold text-white">GradientBoosting Credit Underwriter</div>
+                  <div className="text-slate-400">Instant loan eligibility, DTI calculation, and risk scoring.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <span>256-Bit Encrypted ACID Ledger</span>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('login');
+                setLoginEmail('admin@trustbank.pk');
+                setLoginPassword('admin123');
+              }}
+              className="text-slate-400 hover:text-emerald-400 underline cursor-pointer"
+            >
+              Compliance Officer Portal
+            </button>
+          </div>
+        </div>
+
+        <div className="lg:w-7/12 flex items-center justify-center p-6 sm:p-12">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('login');
+                  setAuthError('');
+                }}
+                className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  authMode === 'login'
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5" /> Internet Banking Login
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('register');
+                  setAuthError('');
+                }}
+                className={`py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  authMode === 'register'
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5" /> Open New Account
+              </button>
+            </div>
+
+            {authError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs text-rose-200">
+                {authError}
+              </div>
+            )}
+
+            {authMode === 'login' ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Sign In to TrustBank</h3>
+                  <p className="text-xs text-slate-400">
+                    Enter your registered Email Address or Account Number (TB-XXXX-XXXX).
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Email or Account Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="Enter email or account number"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-all cursor-pointer"
+                >
+                  {authLoading ? 'Authenticating...' : 'Secure Sign In'}
+                </button>
+
+                <p className="text-center text-xs text-slate-400 pt-2">
+                  Don’t have a bank account yet?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setAuthMode('register')}
+                    className="text-emerald-400 font-semibold hover:underline cursor-pointer"
+                  >
+                    Open New Account
+                  </button>
+                </p>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-3">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Open Digital Bank Account</h3>
+                  <p className="text-xs text-slate-400">
+                    Fill in your details to generate your official IBAN & Account Number.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Your Full Name"
+                      value={regForm.full_name}
+                      onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">CNIC Number</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="35202-XXXXXXX-X"
+                      value={regForm.cnic}
+                      onChange={(e) => setRegForm({ ...regForm, cnic: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="you@example.com"
+                      value={regForm.email}
+                      onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Create Password</label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Min 4 chars"
+                      value={regForm.password}
+                      onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Home City</label>
+                    <select
+                      value={regForm.city}
+                      onChange={(e) => setRegForm({ ...regForm, city: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      {PAKISTANI_CITIES.slice(0, 8).map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Account Type</label>
+                    <select
+                      value={regForm.account_type}
+                      onChange={(e) => setRegForm({ ...regForm, account_type: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    >
+                      <option value="Current">Current Account</option>
+                      <option value="Savings">Savings Account</option>
+                      <option value="Asaan">Asaan Digital</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Monthly Income (PKR)</label>
+                    <input
+                      type="number"
+                      min="15000"
+                      required
+                      value={regForm.monthly_income}
+                      onChange={(e) => setRegForm({ ...regForm, monthly_income: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-slate-400 mb-1">Initial Cash Deposit (PKR)</label>
+                    <input
+                      type="number"
+                      min="1000"
+                      required
+                      value={regForm.initial_deposit}
+                      onChange={(e) => setRegForm({ ...regForm, initial_deposit: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-all cursor-pointer mt-2"
+                >
+                  {authLoading ? 'Opening Account...' : 'Create Account & Generate IBAN'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboard) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-200">
+        <RefreshCw className="w-7 h-7 text-emerald-400 animate-spin" />
+      </div>
+    );
+  }
+
+  const isAdmin = currentUser.role === 'ADMIN';
+  const myTransactions = isAdmin
+    ? dashboard.transactions
+    : dashboard.transactions.filter(
+        (t) =>
+          t.sender_account_id === currentUser.account_id ||
+          t.receiver_account_id === currentUser.account_id
+      );
+
+  const myLoans = isAdmin
+    ? dashboard.loans
+    : dashboard.loans.filter((l) => l.customer_id === currentUser.customer_id);
+
+  const myAlerts = isAdmin
+    ? dashboard.alerts
+    : dashboard.alerts.filter((al) => al.account_id === currentUser.account_id);
+
+  const filteredStatement = myTransactions.filter((t) => {
+    const matchesStatus = txnFilter === 'ALL' || t.status === txnFilter;
+    const matchesSearch =
+      t.txn_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.receiver_label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.txn_city.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const handleTransferSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingTransfer(true);
+    setTransferFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender_account_id: Number(currentUser.account_id),
+          beneficiary_bank: beneficiaryBank,
+          beneficiary_account_number: beneficiaryAccNum.trim(),
+          beneficiary_title: beneficiaryTitle.trim(),
+          amount: parseFloat(amount),
+          txn_city: txnCity,
+          txn_hour: Number(txnHour),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTransferFeedback({ type: 'error', message: data.detail || 'Transfer failed' });
+      } else if (data.status === 'BLOCKED_FRAUD') {
+        setTransferFeedback({ type: 'fraud', ...data });
+      } else {
+        setTransferFeedback({ type: 'success', ...data });
+      }
+      await fetchAllData();
+    } catch {
+      setTransferFeedback({ type: 'error', message: 'Cannot reach backend server.' });
+    } finally {
+      setSubmittingTransfer(false);
+    }
+  };
+
+  const handleDepositSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingDeposit(true);
+    setDepositFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/accounts/deposit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: currentUser.account_id,
+          amount: parseFloat(depositAmount),
+          deposit_source: depositSource,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDepositFeedback({ type: 'error', message: data.detail || 'Deposit failed' });
+      } else {
+        setDepositFeedback({ type: 'success', message: data.message });
+      }
+      await fetchAllData();
+    } finally {
+      setSubmittingDeposit(false);
+    }
+  };
+
+  const handleLoanSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingLoan(true);
+    setLoanFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/loans/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_id: currentUser.customer_id,
+          requested_amount: parseFloat(loanAmount),
+          tenure_months: Number(tenureMonths),
+          existing_debt: parseFloat(existingDebt),
+          purpose: loanPurpose,
+        }),
+      });
+      const data = await res.json();
+      setLoanFeedback(data);
+      await fetchAllData();
+    } finally {
+      setSubmittingLoan(false);
+    }
+  };
+
+  const handleUnfreeze = async (accountId) => {
+    await fetch(`${API_BASE}/admin/unfreeze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_id: accountId,
+        admin_note: 'Verified identity via biometric & OTP',
+      }),
+    });
+    await fetchAllData();
+  };
+
+  const downloadCSVStatement = () => {
+    const headers = ['Reference,Sender,Beneficiary,City,Hour,Amount_PKR,Fraud_Score,Status,Timestamp'];
+    const rows = filteredStatement.map(
+      (t) =>
+        `${t.txn_reference},"${t.sender_name}","${t.receiver_label}",${t.txn_city},${t.txn_hour}:00,${t.amount},${t.fraud_score}%,${t.status},${t.created_at}`
+    );
+    const blob = new Blob([headers.concat(rows).join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TrustBank_Statement_${currentUser.account_number}.csv`;
+    a.click();
+  };
+
+  const copyIbanToClipboard = () => {
+    navigator.clipboard.writeText(currentUser.iban);
+    setCopiedIban(true);
+    setTimeout(() => setCopiedIban(false), 2000);
+  };
+
+  const navItems = [
+    { id: 'overview', label: 'Account Overview', icon: LayoutDashboard },
+    { id: 'transfers', label: 'Send Money (IBFT)', icon: Send },
+    { id: 'deposit', label: 'Add Cash / Deposit', icon: PlusCircle },
+    { id: 'statement', label: 'E-Statement & Ledger', icon: FileSpreadsheet },
+    { id: 'loans', label: 'AI Loan & Credit', icon: FileCheck2 },
+    { id: 'security', label: 'Security & Alerts', icon: ShieldAlert, badge: myAlerts.length },
+    { id: 'compliance', label: 'Compliance & ML Lab', icon: Cpu },
+  ];
+
+  const fraudFeatureChart = metrics
+    ? Object.entries(metrics.fraud_model.feature_importance).map(([name, value]) => ({
+        name: name.replaceAll('_', ' '),
+        value,
+      }))
+    : [];
+
+  const loanFeatureChart = metrics
+    ? Object.entries(metrics.loan_model.feature_importance).map(([name, value]) => ({
+        name: name.replaceAll('_', ' '),
+        value,
+      }))
+    : [];
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row">
+      {/* LEFT COMMERCIAL BANKING SIDEBAR */}
+      <aside className="lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between shrink-0">
+        <div>
+          <div className="p-5 border-b border-slate-800 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
+              <Landmark className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+            </div>
+            <div>
+              <h1 className="font-bold text-base text-white leading-none">
+                TrustBank <span className="text-emerald-400">AI</span>
+              </h1>
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider">
+                {isAdmin ? 'Compliance Portal' : 'Retail Banking'}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 mx-3 mt-4 rounded-xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white truncate">{currentUser.full_name}</span>
+              <span
+                className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                  currentUser.status === 'ACTIVE'
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-rose-500/20 text-rose-400'
+                }`}
+              >
+                {currentUser.status}
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 mt-1">{currentUser.account_number}</div>
+            <div className="text-[11px] text-emerald-400 font-semibold mt-1">
+              PKR {currentUser.balance.toLocaleString()}
+            </div>
+          </div>
+
+          <nav className="p-3 space-y-1 mt-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+                    active
+                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </span>
+                  {item.badge > 0 && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-rose-500 text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800/80 hover:bg-rose-500/20 hover:text-rose-300 text-slate-300 text-xs font-semibold transition-all cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" /> Sign Out
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-16 border-b border-slate-800 bg-slate-900/50 px-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-bold text-white capitalize">
+              {navItems.find((n) => n.id === activeSection)?.label}
+            </h2>
+            <p className="text-[11px] text-slate-400">
+              {currentUser.city}, Pakistan • Account: {currentUser.account_number}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchAllData}
+              className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer"
+              title="Refresh Ledger"
+            >
+              <RefreshCw className={`w-4 h-4 ${loadingData ? 'animate-spin text-emerald-400' : ''}`} />
+            </button>
+            <button
+              onClick={() => setActiveSection('security')}
+              className="relative p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <Bell className="w-4 h-4" />
+              {myAlerts.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500" />
+              )}
+            </button>
+          </div>
+        </header>
+
+        {currentUser.status === 'FROZEN' && (
+          <div className="bg-rose-950/80 border-b border-rose-500/40 px-6 py-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-rose-200">
+              <Lock className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>
+                <strong>SECURITY LOCK ACTIVE:</strong> Outgoing transfers are suspended due to an anomalous transaction alert triggered by TrustBank AI Shield.
+              </span>
+            </div>
+            <button
+              onClick={() => setActiveSection('compliance')}
+              className="px-3 py-1 rounded-lg bg-rose-500 text-white font-semibold cursor-pointer"
+            >
+              Review & Resolve
+            </button>
+          </div>
+        )}
+
+        <main className="p-6 max-w-6xl w-full mx-auto space-y-6">
+          {/* ======================================================= */}
+          {/* SECTION 1: ACCOUNT OVERVIEW & VIRTUAL DEBIT CARD        */}
+          {/* ======================================================= */}
+          {activeSection === 'overview' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-5">
+                  <div
+                    className={`rounded-2xl p-6 border shadow-2xl relative overflow-hidden ${
+                      currentUser.status === 'FROZEN'
+                        ? 'bg-gradient-to-br from-rose-950 via-slate-900 to-slate-950 border-rose-500/50'
+                        : 'bg-gradient-to-br from-emerald-900/60 via-slate-900 to-slate-950 border-emerald-500/40'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold tracking-widest uppercase text-emerald-300">
+                        TrustBank Platinum
+                      </span>
+                      <CreditCard className="w-6 h-6 text-emerald-400" />
+                    </div>
+
+                    <div className="mt-6">
+                      <div className="text-[11px] text-slate-400">Available Balance</div>
+                      <div className="text-3xl font-extrabold text-white mt-0.5">
+                        PKR {currentUser.balance.toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-between">
+                      <div className="font-mono text-sm tracking-widest text-slate-200">
+                        {showCardDetails
+                          ? currentUser.card_number
+                          : `•••• •••• •••• ${currentUser.card_number.slice(-4)}`}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowCardDetails(!showCardDetails)}
+                        className="text-xs text-slate-300 hover:text-white flex items-center gap-1 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-700 cursor-pointer"
+                      >
+                        {showCardDetails ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {showCardDetails ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+
+                    <div className="mt-5 pt-4 border-t border-white/10 flex justify-between text-xs">
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">CARD HOLDER</span>
+                        <span className="font-semibold text-white">{currentUser.full_name}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">EXPIRY</span>
+                        <span className="font-mono text-white">{currentUser.card_expiry}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px]">CVV</span>
+                        <span className="font-mono text-white">
+                          {showCardDetails ? currentUser.card_cvv : '•••'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-5">
+                  <div>
+                    <h3 className="text-sm font-bold text-white mb-3">Account & IBAN Details (Share to Receive Money)</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-slate-400 block text-[11px]">Account Number</span>
+                        <span className="font-mono font-bold text-white mt-1 block">
+                          {currentUser.account_number}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-slate-400 block text-[11px]">IBAN Number</span>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="font-mono font-semibold text-emerald-300 text-[11px]">
+                            {currentUser.iban}
+                          </span>
+                          <button
+                            onClick={copyIbanToClipboard}
+                            className="text-slate-400 hover:text-white cursor-pointer"
+                          >
+                            {copiedIban ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-slate-400 block text-[11px]">Declared Monthly Income</span>
+                        <span className="font-semibold text-white mt-1 block">
+                          PKR {currentUser.monthly_income.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-slate-400 block text-[11px]">AI Credit Rating</span>
+                        <span className="font-semibold text-sky-400 mt-1 block">
+                          {currentUser.credit_score} / 850 (Prime Tier)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 pt-2">
+                    <button
+                      onClick={() => setActiveSection('transfers')}
+                      className="p-3 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex flex-col items-center gap-1.5 cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" /> Send Money
+                    </button>
+                    <button
+                      onClick={() => setActiveSection('deposit')}
+                      className="p-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-xs font-semibold flex flex-col items-center gap-1.5 cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4" /> Add Cash
+                    </button>
+                    <button
+                      onClick={() => setActiveSection('loans')}
+                      className="p-3 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold flex flex-col items-center gap-1.5 cursor-pointer"
+                    >
+                      <FileCheck2 className="w-4 h-4" /> Apply Loan
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-white">Recent Account Activity</h3>
+                  <button
+                    onClick={() => setActiveSection('statement')}
+                    className="text-xs text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    View Full Statement →
+                  </button>
+                </div>
+                {myTransactions.length === 0 ? (
+                  <p className="text-xs text-slate-400">
+                    No transactions yet. Send money via IBFT or deposit cash to see live ledger entries.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {myTransactions.slice(0, 5).map((txn) => {
+                      const isDeposit = txn.txn_reference.startsWith('DEP-');
+                      const isOutgoing = !isDeposit && txn.sender_account_id === currentUser.account_id;
+                      return (
+                        <div
+                          key={txn.txn_id}
+                          className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                txn.status === 'BLOCKED_FRAUD'
+                                  ? 'bg-rose-500/20 text-rose-400'
+                                  : isOutgoing
+                                  ? 'bg-amber-500/15 text-amber-400'
+                                  : 'bg-emerald-500/15 text-emerald-400'
+                              }`}
+                            >
+                              {isOutgoing ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <div className="font-semibold text-white">
+                                {isDeposit
+                                  ? txn.receiver_label
+                                  : isOutgoing
+                                  ? `To: ${txn.receiver_label}`
+                                  : `From: ${txn.sender_name}`}
+                              </div>
+                              <div className="text-[11px] text-slate-400">
+                                {txn.txn_reference} • {txn.txn_city} ({txn.txn_hour}:00)
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div
+                              className={`font-bold ${
+                                txn.status === 'BLOCKED_FRAUD'
+                                  ? 'text-rose-400 line-through'
+                                  : isOutgoing
+                                  ? 'text-white'
+                                  : 'text-emerald-400'
+                              }`}
+                            >
+                              {isOutgoing ? '-' : '+'} PKR {txn.amount.toLocaleString()}
+                            </div>
+                            <div className="text-[10px] text-slate-400">{txn.status}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 2: REAL INTER-BANK FUND TRANSFER (IBFT)         */}
+          {/* ======================================================= */}
+          {activeSection === 'transfers' && (
+            <div className="max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-white">Inter-Bank Fund Transfer (IBFT)</h3>
+                <p className="text-xs text-slate-400">
+                  Select destination bank, enter Account Number or IBAN, and verify recipient title
+                </p>
+              </div>
+
+              <form onSubmit={handleTransferSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Select Beneficiary Bank
+                  </label>
+                  <select
+                    value={beneficiaryBank}
+                    onChange={(e) => {
+                      setBeneficiaryBank(e.target.value);
+                      setVerifiedHolder(null);
+                      setLookupError('');
+                    }}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {SUPPORTED_BANKS.map((bank) => (
+                      <option key={bank} value={bank}>
+                        {bank}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Beneficiary Account Number / IBAN / Mobile Wallet
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder={
+                        beneficiaryBank === 'TrustBank AI'
+                          ? 'Enter TrustBank Account Number (e.g. TB-1002-XXXX) or IBAN'
+                          : 'Enter Account Number or IBAN'
+                      }
+                      value={beneficiaryAccNum}
+                      onChange={(e) => {
+                        setBeneficiaryAccNum(e.target.value);
+                        setVerifiedHolder(null);
+                        setLookupError('');
+                      }}
+                      className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                    />
+                    {beneficiaryBank === 'TrustBank AI' && (
+                      <button
+                        type="button"
+                        onClick={handleVerifyTitle}
+                        disabled={lookingUp || !beneficiaryAccNum}
+                        className="px-4 py-2.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 text-xs font-semibold cursor-pointer whitespace-nowrap"
+                      >
+                        {lookingUp ? 'Checking...' : 'Fetch Title'}
+                      </button>
+                    )}
+                  </div>
+
+                  {verifiedHolder && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-2">
+                      <BadgeCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Verified Account Title: <strong>{verifiedHolder.full_name}</strong> ({verifiedHolder.city})
+                      </span>
+                    </div>
+                  )}
+
+                  {lookupError && (
+                    <div className="mt-2 text-xs text-rose-400">{lookupError}</div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Account Holder Name (Title)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    readOnly={beneficiaryBank === 'TrustBank AI' && Boolean(verifiedHolder)}
+                    placeholder="Enter recipient's full name"
+                    value={beneficiaryTitle}
+                    onChange={(e) => setBeneficiaryTitle(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">
+                    Transfer Amount (Available: PKR {currentUser.balance.toLocaleString()})
+                  </label>
+                  <input
+                    type="number"
+                    min="100"
+                    required
+                    placeholder="Enter amount in PKR"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" /> Originating City
+                    </label>
+                    <select
+                      value={txnCity}
+                      onChange={(e) => setTxnCity(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                    >
+                      {PAKISTANI_CITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> Hour of Day (0–23)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="23"
+                      required
+                      value={txnHour}
+                      onChange={(e) => setTxnHour(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingTransfer}
+                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition-all cursor-pointer"
+                >
+                  {submittingTransfer ? 'AI Scanning & Settling IBFT...' : 'Confirm & Send Money'}
+                </button>
+              </form>
+
+              {transferFeedback && (
+                <div
+                  className={`p-4 rounded-xl border text-xs space-y-1 ${
+                    transferFeedback.type === 'success'
+                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-200'
+                      : 'bg-rose-500/15 border-rose-500/50 text-rose-200'
+                  }`}
+                >
+                  <div className="font-bold text-sm">
+                    {transferFeedback.type === 'success' ? 'Transfer Settled' : 'Security Intervention'}
+                  </div>
+                  <p>{transferFeedback.message}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 3: ADD CASH / BRANCH DEPOSIT                    */}
+          {/* ======================================================= */}
+          {activeSection === 'deposit' && (
+            <div className="max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-white">Deposit Funds into Your Account</h3>
+                <p className="text-xs text-slate-400">
+                  Simulate Cash Deposit Machine (CDM) or Branch Over-the-Counter deposit into{' '}
+                  <strong className="text-emerald-400">{currentUser.account_number}</strong>.
+                </p>
+              </div>
+
+              <form onSubmit={handleDepositSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Deposit Channel</label>
+                  <select
+                    value={depositSource}
+                    onChange={(e) => setDepositSource(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                  >
+                    <option value="Branch Cash Counter / CDM">Branch Cash Counter / CDM</option>
+                    <option value="RAAST Incoming Transfer">RAAST Incoming Transfer</option>
+                    <option value="Foreign Remittance Settlement">Foreign Remittance Settlement</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Deposit Amount (PKR)</label>
+                  <input
+                    type="number"
+                    min="500"
+                    required
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submittingDeposit}
+                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm cursor-pointer"
+                >
+                  {submittingDeposit ? 'Crediting Account...' : 'Deposit Funds Now'}
+                </button>
+              </form>
+
+              {depositFeedback && (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-xs text-emerald-200">
+                  {depositFeedback.message}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 4: E-STATEMENT & FILTERABLE LEDGER              */}
+          {/* ======================================================= */}
+          {activeSection === 'statement' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-white">Official Digital E-Statement</h3>
+                  <p className="text-xs text-slate-400">
+                    Account: {currentUser.account_number} • IBAN: {currentUser.iban}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search ref, bank, or city..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white"
+                    />
+                  </div>
+
+                  <select
+                    value={txnFilter}
+                    onChange={(e) => setTxnFilter(e.target.value)}
+                    className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                  >
+                    <option value="ALL">All Transactions</option>
+                    <option value="COMPLETED">Settled Only</option>
+                    <option value="BLOCKED_FRAUD">Blocked Fraud Only</option>
+                  </select>
+
+                  <button
+                    onClick={downloadCSVStatement}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-semibold text-xs cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Export CSV
+                  </button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-[11px] uppercase text-slate-400">
+                      <th className="py-3 px-2">Reference</th>
+                      <th className="py-3 px-2">Sender</th>
+                      <th className="py-3 px-2">Beneficiary & Bank</th>
+                      <th className="py-3 px-2">City / Time</th>
+                      <th className="py-3 px-2">Amount</th>
+                      <th className="py-3 px-2">AI Risk</th>
+                      <th className="py-3 px-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {filteredStatement.map((txn) => (
+                      <tr key={txn.txn_id} className="hover:bg-slate-800/30">
+                        <td className="py-3 px-2 font-mono text-slate-300">{txn.txn_reference}</td>
+                        <td className="py-3 px-2 text-slate-300">{txn.sender_name}</td>
+                        <td className="py-3 px-2 text-slate-300">{txn.receiver_label}</td>
+                        <td className="py-3 px-2 text-slate-400">
+                          {txn.txn_city} • {txn.txn_hour}:00
+                        </td>
+                        <td className="py-3 px-2 font-bold text-white">
+                          PKR {txn.amount.toLocaleString()}
+                        </td>
+                        <td className="py-3 px-2 font-mono">{txn.fraud_score}%</td>
+                        <td className="py-3 px-2">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              txn.status === 'COMPLETED'
+                                ? 'bg-emerald-500/15 text-emerald-400'
+                                : 'bg-rose-500/20 text-rose-400'
+                            }`}
+                          >
+                            {txn.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 5: AI LOAN & CREDIT UNDERWRITING                */}
+          {/* ======================================================= */}
+          {activeSection === 'loans' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-white">Instant Credit Underwriting</h3>
+                  <p className="text-xs text-slate-400">
+                    GradientBoosting ML model evaluates your DTI & liquidity in real time.
+                  </p>
+                </div>
+
+                <form onSubmit={handleLoanSubmit} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Loan Amount (PKR)</label>
+                    <input
+                      type="number"
+                      min="20000"
+                      required
+                      value={loanAmount}
+                      onChange={(e) => setLoanAmount(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Tenure</label>
+                      <select
+                        value={tenureMonths}
+                        onChange={(e) => setTenureMonths(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                      >
+                        {[12, 24, 36, 48, 60].map((m) => (
+                          <option key={m} value={m}>
+                            {m} Months
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Existing Debt (PKR)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        required
+                        value={existingDebt}
+                        onChange={(e) => setExistingDebt(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs text-slate-400 mb-1">Purpose</label>
+                    <input
+                      type="text"
+                      required
+                      value={loanPurpose}
+                      onChange={(e) => setLoanPurpose(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingLoan}
+                    className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm cursor-pointer"
+                  >
+                    {submittingLoan ? 'Evaluating...' : 'Submit Loan Application'}
+                  </button>
+                </form>
+
+                {loanFeedback && (
+                  <div className="p-4 rounded-xl bg-slate-950 border border-emerald-500/40 text-xs space-y-1.5">
+                    <div className="flex justify-between font-bold text-sm text-emerald-400">
+                      <span>Verdict: {loanFeedback.decision}</span>
+                      <span>Risk: {loanFeedback.default_probability}%</span>
+                    </div>
+                    <p className="text-slate-300">{loanFeedback.ai_reasoning}</p>
+                    <div className="text-slate-400">
+                      Safe Limit: <strong>PKR {loanFeedback.recommended_limit.toLocaleString()}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h3 className="text-base font-bold text-white mb-4">Your Loan Applications</h3>
+                <div className="space-y-3">
+                  {myLoans.length === 0 ? (
+                    <p className="text-xs text-slate-400">No loan applications submitted yet.</p>
+                  ) : (
+                    myLoans.map((loan) => (
+                      <div
+                        key={loan.loan_id}
+                        className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between"
+                      >
+                        <div>
+                          <div className="text-sm font-bold text-white">
+                            PKR {loan.requested_amount.toLocaleString()} ({loan.tenure_months} Months)
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">{loan.ai_reasoning}</p>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            loan.decision === 'APPROVED'
+                              ? 'bg-emerald-500/15 text-emerald-400'
+                              : 'bg-rose-500/20 text-rose-400'
+                          }`}
+                        >
+                          {loan.decision}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 6: SECURITY & FRAUD ALERTS                      */}
+          {/* ======================================================= */}
+          {activeSection === 'security' && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <h3 className="text-base font-bold text-white">Security Center & Fraud Alerts</h3>
+              {myAlerts.length === 0 ? (
+                <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-center gap-3">
+                  <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                  <div>
+                    <strong className="block text-sm">Your Account is Secure</strong>
+                    No suspicious login or fraudulent transaction attempts detected on {currentUser.account_number}.
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myAlerts.map((al) => (
+                    <div
+                      key={al.alert_id}
+                      className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs space-y-1"
+                    >
+                      <div className="flex justify-between font-bold text-rose-300">
+                        <span>Alert #{al.alert_id} — {al.account_number}</span>
+                        <span>ML Risk Score: {al.fraud_score}%</span>
+                      </div>
+                      <p className="text-slate-200">{al.risk_factors}</p>
+                      <div className="text-slate-400">Status: {al.resolution_status}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ======================================================= */}
+          {/* SECTION 7: COMPLIANCE ADMIN & ML GROUND REALITY LAB     */}
+          {/* ======================================================= */}
+          {activeSection === 'compliance' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-rose-400" /> Compliance Account Control
+                  </h3>
+                  {dashboard.accounts.filter((a) => a.role !== 'ADMIN').length === 0 ? (
+                    <p className="text-xs text-slate-400">
+                      No customer accounts registered yet. Sign out and use "Open New Account" to register customers.
+                    </p>
+                  ) : (
+                    dashboard.accounts
+                      .filter((a) => a.role !== 'ADMIN')
+                      .map((acc) => (
+                        <div
+                          key={acc.account_id}
+                          className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <div className="font-bold text-white">
+                              {acc.full_name} ({acc.account_number})
+                            </div>
+                            <div className="text-slate-400">PKR {acc.balance.toLocaleString()}</div>
+                          </div>
+                          {acc.status === 'FROZEN' ? (
+                            <button
+                              onClick={() => handleUnfreeze(acc.account_id)}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold flex items-center gap-1 cursor-pointer"
+                            >
+                              <Unlock className="w-3.5 h-3.5" /> Unfreeze
+                            </button>
+                          ) : (
+                            <span className="text-emerald-400 font-semibold">ACTIVE</span>
+                          )}
+                        </div>
+                      ))
+                  )}
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Database className="w-4 h-4 text-sky-400" /> Automated DB Trigger Logs
+                  </h3>
+                  {dashboard.audit_logs.length === 0 ? (
+                    <p className="text-xs text-slate-400">No trigger interventions recorded yet.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {dashboard.audit_logs.map((log) => (
+                        <div key={log.log_id} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
+                          <span className="text-[10px] font-mono text-sky-400">{log.engine_source}</span>
+                          <p className="text-slate-200 mt-0.5">{log.action_taken}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {metrics && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h4 className="text-sm font-bold text-white mb-2">
+                      RandomForest Fraud Model (ROC-AUC: {metrics.fraud_model.roc_auc}%)
+                    </h4>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={fraudFeatureChart} layout="vertical">
+                          <XAxis type="number" stroke="#64748b" fontSize={11} />
+                          <YAxis dataKey="name" type="category" width={120} stroke="#94a3b8" fontSize={11} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                          <Bar dataKey="value" fill="#10b981" radius={[0, 6, 6, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                    <h4 className="text-sm font-bold text-white mb-2">
+                      GradientBoosting Loan Model (ROC-AUC: {metrics.loan_model.roc_auc}%)
+                    </h4>
+                    <div className="h-48">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={loanFeatureChart} layout="vertical">
+                          <XAxis type="number" stroke="#64748b" fontSize={11} />
+                          <YAxis dataKey="name" type="category" width={120} stroke="#94a3b8" fontSize={11} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155' }} />
+                          <Bar dataKey="value" fill="#a855f7" radius={[0, 6, 6, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}

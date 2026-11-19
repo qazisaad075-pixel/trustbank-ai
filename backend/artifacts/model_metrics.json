@@ -1,0 +1,47 @@
+{
+    "fraud_model": {
+        "accuracy": 99.71,
+        "precision": 66.67,
+        "recall": 60.0,
+        "f1_score": 63.16,
+        "roc_auc": 99.59,
+        "confusion_matrix": {
+            "tn": 2387,
+            "fp": 3,
+            "fn": 4,
+            "tp": 6
+        },
+        "feature_importance": {
+            "amount": 24.92,
+            "txn_hour": 13.02,
+            "is_city_changed": 22.17,
+            "balance_drain_ratio": 28.95,
+            "velocity_1h": 10.94
+        },
+        "cv_roc_auc": 99.58,
+        "dataset_size": 12000
+    },
+    "loan_model": {
+        "accuracy": 96.88,
+        "precision": 93.1,
+        "recall": 83.08,
+        "f1_score": 87.8,
+        "roc_auc": 98.9,
+        "confusion_matrix": {
+            "tn": 2055,
+            "fp": 20,
+            "fn": 55,
+            "tp": 270
+        },
+        "feature_importance": {
+            "monthly_income": 41.34,
+            "account_balance": 11.33,
+            "requested_amount": 19.16,
+            "existing_debt": 14.38,
+            "tenure_months": 10.43,
+            "avg_monthly_txns": 3.37
+        },
+        "cv_roc_auc": 98.38,
+        "dataset_size": 12000
+    }
+}
