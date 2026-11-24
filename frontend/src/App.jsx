@@ -973,7 +973,7 @@ export default function App() {
                     onClick={() => setActiveSection('statement')}
                     className="text-xs text-emerald-400 hover:underline cursor-pointer"
                   >
-                    View Full Statement ->
+                    View Full Statement &rarr;
                   </button>
                 </div>
                 {myTransactions.length === 0 ? (
