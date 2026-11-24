@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -286,14 +286,14 @@ export default function App() {
             </div>
 
             <div className="mt-8 space-y-3">
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+              <div className="p-3.5 rounded-xl glass-panel flex items-center gap-3">
                 <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div className="text-xs">
                   <div className="font-semibold text-white">RandomForest Fraud Shield</div>
                   <div className="text-slate-400">Real-time anomaly detection with automated account freeze triggers.</div>
                 </div>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center gap-3">
+              <div className="p-3.5 rounded-xl glass-panel flex items-center gap-3">
                 <Cpu className="w-5 h-5 text-sky-400 shrink-0" />
                 <div className="text-xs">
                   <div className="font-semibold text-white">GradientBoosting Credit Underwriter</div>
@@ -320,7 +320,7 @@ export default function App() {
         </div>
 
         <div className="lg:w-7/12 flex items-center justify-center p-6 sm:p-12">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
+          <div className="w-full max-w-md glass-panel rounded-2xl p-6 sm:p-8 shadow-2xl">
             <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800 mb-6">
               <button
                 type="button"
@@ -375,7 +375,7 @@ export default function App() {
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="Enter email or account number"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -387,7 +387,7 @@ export default function App() {
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -400,7 +400,7 @@ export default function App() {
                 </button>
 
                 <p className="text-center text-xs text-slate-400 pt-2">
-                  Don’t have a bank account yet?{' '}
+                  Don•™t have a bank account yet?{' '}
                   <button
                     type="button"
                     onClick={() => setAuthMode('register')}
@@ -428,7 +428,7 @@ export default function App() {
                       placeholder="Your Full Name"
                       value={regForm.full_name}
                       onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                   <div>
@@ -439,7 +439,7 @@ export default function App() {
                       placeholder="35202-XXXXXXX-X"
                       value={regForm.cnic}
                       onChange={(e) => setRegForm({ ...regForm, cnic: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                 </div>
@@ -453,7 +453,7 @@ export default function App() {
                       placeholder="you@example.com"
                       value={regForm.email}
                       onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                   <div>
@@ -464,7 +464,7 @@ export default function App() {
                       placeholder="Min 4 chars"
                       value={regForm.password}
                       onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function App() {
                     <select
                       value={regForm.city}
                       onChange={(e) => setRegForm({ ...regForm, city: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     >
                       {PAKISTANI_CITIES.slice(0, 8).map((c) => (
                         <option key={c} value={c}>
@@ -489,7 +489,7 @@ export default function App() {
                     <select
                       value={regForm.account_type}
                       onChange={(e) => setRegForm({ ...regForm, account_type: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     >
                       <option value="Current">Current Account</option>
                       <option value="Savings">Savings Account</option>
@@ -507,7 +507,7 @@ export default function App() {
                       required
                       value={regForm.monthly_income}
                       onChange={(e) => setRegForm({ ...regForm, monthly_income: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                   <div>
@@ -518,7 +518,7 @@ export default function App() {
                       required
                       value={regForm.initial_deposit}
                       onChange={(e) => setRegForm({ ...regForm, initial_deposit: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2 text-xs text-white"
                     />
                   </div>
                 </div>
@@ -715,7 +715,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row">
       {/* LEFT COMMERCIAL BANKING SIDEBAR */}
-      <aside className="lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between shrink-0">
+      <aside className="lg:w-64 bg-slate-900/65 backdrop-blur-xl border-b lg:border-b-0 lg:border-r border-white/10 flex flex-col justify-between shrink-0">
         <div>
           <div className="p-5 border-b border-slate-800 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
@@ -731,7 +731,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="p-4 mx-3 mt-4 rounded-xl bg-slate-950 border border-slate-800">
+          <div className="p-4 mx-3 mt-4 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white truncate">{currentUser.full_name}</span>
               <span
@@ -791,7 +791,7 @@ export default function App() {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b border-slate-800 bg-slate-900/50 px-6 flex items-center justify-between">
+        <header className="h-16 border-b border-white/10 bg-slate-950/60 backdrop-blur-xl sticky top-0 z-30 px-6 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-white capitalize">
               {navItems.find((n) => n.id === activeSection)?.label}
@@ -901,18 +901,18 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col justify-between space-y-5">
+                <div className="lg:col-span-7 glass-panel rounded-2xl p-6 flex flex-col justify-between space-y-5">
                   <div>
                     <h3 className="text-sm font-bold text-white mb-3">Account & IBAN Details (Share to Receive Money)</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10">
                         <span className="text-slate-400 block text-[11px]">Account Number</span>
                         <span className="font-mono font-bold text-white mt-1 block">
                           {currentUser.account_number}
                         </span>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10">
                         <span className="text-slate-400 block text-[11px]">IBAN Number</span>
                         <div className="flex items-center justify-between mt-1">
                           <span className="font-mono font-semibold text-emerald-300 text-[11px]">
@@ -927,14 +927,14 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10">
                         <span className="text-slate-400 block text-[11px]">Declared Monthly Income</span>
                         <span className="font-semibold text-white mt-1 block">
                           PKR {currentUser.monthly_income.toLocaleString()}
                         </span>
                       </div>
 
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                      <div className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10">
                         <span className="text-slate-400 block text-[11px]">AI Credit Rating</span>
                         <span className="font-semibold text-sky-400 mt-1 block">
                           {currentUser.credit_score} / 850 (Prime Tier)
@@ -966,14 +966,14 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+              <div className="glass-panel rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-white">Recent Account Activity</h3>
                   <button
                     onClick={() => setActiveSection('statement')}
                     className="text-xs text-emerald-400 hover:underline cursor-pointer"
                   >
-                    View Full Statement →
+                    View Full Statement ->
                   </button>
                 </div>
                 {myTransactions.length === 0 ? (
@@ -988,7 +988,7 @@ export default function App() {
                       return (
                         <div
                           key={txn.txn_id}
-                          className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                          className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 flex items-center justify-between text-xs"
                         >
                           <div className="flex items-center gap-3">
                             <div
@@ -1042,7 +1042,7 @@ export default function App() {
           {/* SECTION 2: REAL INTER-BANK FUND TRANSFER (IBFT)         */}
           {/* ======================================================= */}
           {activeSection === 'transfers' && (
-            <div className="max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="max-w-2xl glass-panel rounded-2xl p-6 space-y-4">
               <div>
                 <h3 className="text-base font-bold text-white">Inter-Bank Fund Transfer (IBFT)</h3>
                 <p className="text-xs text-slate-400">
@@ -1062,7 +1062,7 @@ export default function App() {
                       setVerifiedHolder(null);
                       setLookupError('');
                     }}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   >
                     {SUPPORTED_BANKS.map((bank) => (
                       <option key={bank} value={bank}>
@@ -1091,7 +1091,7 @@ export default function App() {
                         setVerifiedHolder(null);
                         setLookupError('');
                       }}
-                      className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                      className="flex-1 bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
                     />
                     {beneficiaryBank === 'TrustBank AI' && (
                       <button
@@ -1130,7 +1130,7 @@ export default function App() {
                     placeholder="Enter recipient's full name"
                     value={beneficiaryTitle}
                     onChange={(e) => setBeneficiaryTitle(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -1145,7 +1145,7 @@ export default function App() {
                     placeholder="Enter amount in PKR"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
@@ -1157,7 +1157,7 @@ export default function App() {
                     <select
                       value={txnCity}
                       onChange={(e) => setTxnCity(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2.5 text-sm text-white"
                     >
                       {PAKISTANI_CITIES.map((c) => (
                         <option key={c} value={c}>
@@ -1168,7 +1168,7 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-xs text-slate-400 mb-1 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" /> Hour of Day (0–23)
+                      <Clock className="w-3.5 h-3.5" /> Hour of Day (0-23)
                     </label>
                     <input
                       type="number"
@@ -1177,7 +1177,7 @@ export default function App() {
                       required
                       value={txnHour}
                       onChange={(e) => setTxnHour(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2.5 text-sm text-white"
                     />
                   </div>
                 </div>
@@ -1212,7 +1212,7 @@ export default function App() {
           {/* SECTION 3: ADD CASH / BRANCH DEPOSIT                    */}
           {/* ======================================================= */}
           {activeSection === 'deposit' && (
-            <div className="max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="max-w-xl glass-panel rounded-2xl p-6 space-y-4">
               <div>
                 <h3 className="text-base font-bold text-white">Deposit Funds into Your Account</h3>
                 <p className="text-xs text-slate-400">
@@ -1227,7 +1227,7 @@ export default function App() {
                   <select
                     value={depositSource}
                     onChange={(e) => setDepositSource(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white"
                   >
                     <option value="Branch Cash Counter / CDM">Branch Cash Counter / CDM</option>
                     <option value="RAAST Incoming Transfer">RAAST Incoming Transfer</option>
@@ -1243,7 +1243,7 @@ export default function App() {
                     required
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                    className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white"
                   />
                 </div>
 
@@ -1268,7 +1268,7 @@ export default function App() {
           {/* SECTION 4: E-STATEMENT & FILTERABLE LEDGER              */}
           {/* ======================================================= */}
           {activeSection === 'statement' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="glass-panel rounded-2xl p-6 space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-white">Official Digital E-Statement</h3>
@@ -1285,14 +1285,14 @@ export default function App() {
                       placeholder="Search ref, bank, or city..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white"
+                      className="bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-lg pl-8 pr-3 py-1.5 text-xs text-white"
                     />
                   </div>
 
                   <select
                     value={txnFilter}
                     onChange={(e) => setTxnFilter(e.target.value)}
-                    className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
+                    className="bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-lg px-3 py-1.5 text-xs text-white"
                   >
                     <option value="ALL">All Transactions</option>
                     <option value="COMPLETED">Settled Only</option>
@@ -1358,7 +1358,7 @@ export default function App() {
           {/* ======================================================= */}
           {activeSection === 'loans' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="lg:col-span-5 glass-panel rounded-2xl p-6 space-y-4">
                 <div>
                   <h3 className="text-base font-bold text-white">Instant Credit Underwriting</h3>
                   <p className="text-xs text-slate-400">
@@ -1375,7 +1375,7 @@ export default function App() {
                       required
                       value={loanAmount}
                       onChange={(e) => setLoanAmount(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3.5 py-2.5 text-sm text-white"
                     />
                   </div>
 
@@ -1385,7 +1385,7 @@ export default function App() {
                       <select
                         value={tenureMonths}
                         onChange={(e) => setTenureMonths(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                        className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2.5 text-sm text-white"
                       >
                         {[12, 24, 36, 48, 60].map((m) => (
                           <option key={m} value={m}>
@@ -1402,7 +1402,7 @@ export default function App() {
                         required
                         value={existingDebt}
                         onChange={(e) => setExistingDebt(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                        className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2.5 text-sm text-white"
                       />
                     </div>
                   </div>
@@ -1414,7 +1414,7 @@ export default function App() {
                       required
                       value={loanPurpose}
                       onChange={(e) => setLoanPurpose(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white"
+                      className="w-full bg-white/[0.04] backdrop-blur-md border border-white/15 focus:bg-white/[0.07] focus:ring-2 focus:ring-emerald-500/30 transition-all rounded-xl px-3 py-2.5 text-sm text-white"
                     />
                   </div>
 
@@ -1441,7 +1441,7 @@ export default function App() {
                 )}
               </div>
 
-              <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+              <div className="lg:col-span-7 glass-panel rounded-2xl p-6">
                 <h3 className="text-base font-bold text-white mb-4">Your Loan Applications</h3>
                 <div className="space-y-3">
                   {myLoans.length === 0 ? (
@@ -1450,7 +1450,7 @@ export default function App() {
                     myLoans.map((loan) => (
                       <div
                         key={loan.loan_id}
-                        className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between"
+                        className="p-4 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 flex items-center justify-between"
                       >
                         <div>
                           <div className="text-sm font-bold text-white">
@@ -1479,7 +1479,7 @@ export default function App() {
           {/* SECTION 6: SECURITY & FRAUD ALERTS                      */}
           {/* ======================================================= */}
           {activeSection === 'security' && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div className="glass-panel rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white">Security Center & Fraud Alerts</h3>
               {myAlerts.length === 0 ? (
                 <div className="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-200 flex items-center gap-3">
@@ -1497,7 +1497,7 @@ export default function App() {
                       className="p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs space-y-1"
                     >
                       <div className="flex justify-between font-bold text-rose-300">
-                        <span>Alert #{al.alert_id} — {al.account_number}</span>
+                        <span>Alert #{al.alert_id} - {al.account_number}</span>
                         <span>ML Risk Score: {al.fraud_score}%</span>
                       </div>
                       <p className="text-slate-200">{al.risk_factors}</p>
@@ -1515,7 +1515,7 @@ export default function App() {
           {activeSection === 'compliance' && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="glass-panel rounded-2xl p-5 space-y-3">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <Lock className="w-4 h-4 text-rose-400" /> Compliance Account Control
                   </h3>
@@ -1529,7 +1529,7 @@ export default function App() {
                       .map((acc) => (
                         <div
                           key={acc.account_id}
-                          className="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs"
+                          className="p-3 rounded-xl bg-white/[0.03] backdrop-blur-md border border-white/10 flex items-center justify-between text-xs"
                         >
                           <div>
                             <div className="font-bold text-white">
@@ -1552,7 +1552,7 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="glass-panel rounded-2xl p-5 space-y-3">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <Database className="w-4 h-4 text-sky-400" /> Automated DB Trigger Logs
                   </h3>
@@ -1561,7 +1561,7 @@ export default function App() {
                   ) : (
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {dashboard.audit_logs.map((log) => (
-                        <div key={log.log_id} className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
+                        <div key={log.log_id} className="p-2.5 rounded-lg bg-white/[0.03] backdrop-blur-md border border-white/10 text-xs">
                           <span className="text-[10px] font-mono text-sky-400">{log.engine_source}</span>
                           <p className="text-slate-200 mt-0.5">{log.action_taken}</p>
                         </div>
@@ -1573,7 +1573,7 @@ export default function App() {
 
               {metrics && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                  <div className="glass-panel rounded-2xl p-5">
                     <h4 className="text-sm font-bold text-white mb-2">
                       RandomForest Fraud Model (ROC-AUC: {metrics.fraud_model.roc_auc}%)
                     </h4>
@@ -1589,7 +1589,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                  <div className="glass-panel rounded-2xl p-5">
                     <h4 className="text-sm font-bold text-white mb-2">
                       GradientBoosting Loan Model (ROC-AUC: {metrics.loan_model.roc_auc}%)
                     </h4>
@@ -1613,3 +1613,5 @@ export default function App() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import os
 import random
 import uuid
@@ -19,7 +19,7 @@ from .schemas import (
 )
 
 app = FastAPI(
-    title="TrustBank AI — Enterprise Core Banking & Dual-ML Engine",
+    title="TrustBank AI - Enterprise Core Banking & Dual-ML Engine",
     version="3.1.0",
 )
 
@@ -433,3 +433,4 @@ def get_model_metrics():
         train_and_export_all()
     with open(metrics_path, "r") as f:
         return json.load(f)
+
